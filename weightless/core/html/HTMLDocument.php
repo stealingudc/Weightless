@@ -46,9 +46,9 @@ class HTMLDocument extends HTMLElement
         $tag_name = $matches[1];
         $attributes = self::parseAttributes($matches[2]);
         if ($tag_name === "module") {
-          $element = new HTMLModuleElement($attributes, "", document: $document);
+          $element = new HTMLModuleElement($document, $attributes, "");
         } else {
-          $element = new HTMLElement($tag_name, $attributes, "", document: $document);
+          $element = new HTMLElement($tag_name, $document, $attributes, "");
         }
         $stack[count($stack) - 1]->appendChild($element);
         if (!in_array($tag_name, ['br', 'img', 'input', 'meta', 'hr', 'link'])) {
@@ -91,9 +91,9 @@ class HTMLDocument extends HTMLElement
         $tag_name = $matches[1];
         $attributes = self::parseAttributes($matches[2]);
         if ($tag_name === "module") {
-          $element = new HTMLModuleElement($attributes, "", document: $document);
+          $element = new HTMLModuleElement($document, $attributes, "");
         } else {
-          $element = new HTMLElement($tag_name, $attributes, "", document: $document);
+          $element = new HTMLElement($tag_name, $document, $attributes, "");
         }
         $previousElement = &$element;
         $stack[count($stack) - 1]->appendChild($element);
@@ -109,7 +109,10 @@ class HTMLDocument extends HTMLElement
     return $document;
   }
 
-  private static function parseAttributes(string $attribute_str)
+  /**
+   * @return array<string, string>
+   * */
+  private static function parseAttributes(string $attribute_str): array
   {
     $attributes = [];
     preg_match_all('/([\w-]+)\s*=\s*"([^"]*)"/', $attribute_str, $matches, PREG_SET_ORDER);
@@ -119,16 +122,22 @@ class HTMLDocument extends HTMLElement
     return $attributes;
   }
 
-  public function toString(array $params = [])
+  /**
+   * @param array<string, mixed> $params
+   * */
+  public function toString(array $params = []): string
   {
     $str = htmlspecialchars_decode($this->formatChildren(), ENT_NOQUOTES | ENT_HTML5);
-    foreach($params as $key => $value){
-      $str = str_replace("{".$key."}", $value, $str);
+    foreach ($params as $key => $value) {
+      $str = str_replace("{" . $key . "}", $value, $str);
     }
     return $str;
   }
 
-  public function echo(array $params = [])
+  /**
+   * @param array<string, mixed> $params
+   * */
+  public function echo(array $params = []): void
   {
     echo "<script src='https://unpkg.com/htmx.org@2.0.2'></script>\n\n";
     echo $this->toString($params);

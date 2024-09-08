@@ -8,6 +8,7 @@ use Weightless\Core\Logic\ClosureContainer;
 class HTMLElement
 {
   public string $tagName;
+  /** @var array<string, string> */
   public array $attributes = [];
   /** @var HTMLElement[] */
   public array $children = [];
@@ -15,7 +16,8 @@ class HTMLElement
   public HTMLElement | null $parentElement;
   public ClosureContainer $closureContainer;
 
-  public function __construct(string $tagName, array $attributes = [], string $textContent = "", public HTMLDocument | null &$document)
+  /** @param array<string, string> $attributes */
+  public function __construct(string $tagName, public HTMLDocument | null &$document, array $attributes = [], string $textContent = "")
   {
     $this->tagName = $tagName;
     $this->attributes = $attributes;
@@ -23,12 +25,12 @@ class HTMLElement
     $this->closureContainer = new ClosureContainer($this);
   }
 
-  public function appendChild(HTMLElement $child)
+  public function appendChild(HTMLElement $child): void
   {
     $this->children[] = $child;
   }
 
-  public function toString()
+  public function toString(): string
   {
     $attr_string = $this->formatAttributes();
     $children_string = $this->formatChildren();
@@ -40,7 +42,7 @@ class HTMLElement
     return "<{$this->tagName}{$attr_string}>{$children_string}{$this->textContent}</{$this->tagName}>";
   }
 
-  protected function formatAttributes()
+  protected function formatAttributes(): string
   {
     $parts = [];
     foreach ($this->attributes as $key => $value) {
@@ -49,7 +51,7 @@ class HTMLElement
     return $parts ? ' ' . implode(' ', $parts) : "";
   }
 
-  protected function formatChildren()
+  protected function formatChildren(): string
   {
     $children_strings = [];
     foreach ($this->children as $child) {
@@ -60,8 +62,6 @@ class HTMLElement
       }
       if ($child instanceof HTMLElement) {
         $children_strings[] = $child->toString();
-      } else {
-        $children_strings[] = htmlspecialchars($child, ENT_NOQUOTES | ENT_HTML5);
       }
     }
     return implode('', $children_strings);

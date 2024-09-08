@@ -8,18 +8,18 @@ use Weightless\Core\Router as Router;
 #[\Attribute]
 class Attribute
 {
-  public $targetClass;
+  public string $targetClass;
   public mixed $target;
   public string $attributeName;
-  public $args;
+  public mixed $args;
 
-  public function __construct(string $attributeName, ...$args)
+  public function __construct(string $attributeName, mixed ...$args)
   {
     $this->attributeName = $attributeName;
     $this->args = $args;
   }
 
-  public function execute()
+  public function execute(): void
   {
     // TODO: clean this up, lol
     $targetClassRefl = new ReflectionClass($this->targetClass);

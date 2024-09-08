@@ -13,17 +13,17 @@ use Weightless\Core\Logic\Singleton;
 class Router extends Singleton
 {
   /**
-   * @var array The route patterns and their handling functions
+   * @var array<string, mixed> The route patterns and their handling functions
    */
   private $afterRoutes = array();
 
   /**
-   * @var array The before middleware route patterns and their handling functions
+   * @var array<string, mixed> The before middleware route patterns and their handling functions
    */
   private $beforeRoutes = array();
 
   /**
-   * @var array [object|callable] The function to be executed when no route has been matched
+   * @var array<object|callable> The function to be executed when no route has been matched
    */
   protected $notFoundCallback = [];
 
@@ -54,7 +54,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function before($methods, $pattern, $fn)
+  public function before($methods, $pattern, $fn): void
   {
     $pattern = $this->baseRoute . '/' . trim($pattern, '/');
     $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
@@ -75,11 +75,11 @@ class Router extends Singleton
   /**
    * Store a route and a handling function to be executed when accessed using one of the specified methods.
    *
-   * @param array          $methods Allowed methods
+   * @param array<string>          $methods Allowed methods
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function match(array $methods, $pattern, $fn)
+  public function match(array $methods, $pattern, $fn): void
   {
     $pattern = $this->baseRoute . '/' . trim($pattern, '/');
     $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
@@ -98,7 +98,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function all($pattern, $fn)
+  public function all($pattern, $fn): void
   {
     $this->match(["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"], $pattern, $fn);
   }
@@ -109,7 +109,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function get($pattern, $fn)
+  public function get($pattern, $fn): void
   {
     $this->match(['GET'], $pattern, $fn);
   }
@@ -120,7 +120,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function post($pattern, $fn)
+  public function post($pattern, $fn): void
   {
     $this->match(['POST'], $pattern, $fn);
   }
@@ -131,7 +131,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function patch($pattern, $fn)
+  public function patch($pattern, $fn): void
   {
     $this->match(['PATCH'], $pattern, $fn);
   }
@@ -142,7 +142,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function delete($pattern, $fn)
+  public function delete($pattern, $fn): void
   {
     $this->match(['DELETE'], $pattern, $fn);
   }
@@ -153,7 +153,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function put($pattern, $fn)
+  public function put($pattern, $fn): void
   {
     $this->match(['PUT'], $pattern, $fn);
   }
@@ -164,7 +164,7 @@ class Router extends Singleton
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
-  public function options($pattern, $fn)
+  public function options($pattern, $fn): void
   {
     $this->match(['OPTIONS'], $pattern, $fn);
   }
@@ -175,7 +175,7 @@ class Router extends Singleton
    * @param string   $baseRoute The route sub pattern to mount the callbacks on
    * @param callable $fn        The callback method
    */
-  public function mount($baseRoute, $fn)
+  public function mount($baseRoute, $fn): void
   {
     // Track current base route
     $curBaseRoute = $this->baseRoute;
@@ -193,9 +193,9 @@ class Router extends Singleton
   /**
    * Get all request headers.
    *
-   * @return array The request headers
+   * @return array<string> The request headers
    */
-  public function getRequestHeaders()
+  public static function getRequestHeaders(): array
   {
     $headers = array();
 
@@ -224,7 +224,7 @@ class Router extends Singleton
    *
    * @return string The Request method to handle
    */
-  public static function getRequestMethod()
+  public static function getRequestMethod(): string
   {
     // Take the method as found in $_SERVER
     $method = $_SERVER['REQUEST_METHOD'];
@@ -252,7 +252,7 @@ class Router extends Singleton
    *
    * @param string $namespace A given namespace
    */
-  public function setNamespace($namespace)
+  public function setNamespace($namespace): void
   {
     if (is_string($namespace)) {
       $this->namespace = $namespace;
@@ -319,7 +319,7 @@ class Router extends Singleton
    * @param object|callable|string $match_fn The function to be executed
    * @param object|callable $fn The function to be executed
    */
-  public function set404($match_fn, $fn = null)
+  public function set404($match_fn, $fn = null): void
   {
     if (!is_null($fn)) {
       $this->notFoundCallback[$match_fn] = $fn;
@@ -331,9 +331,9 @@ class Router extends Singleton
   /**
    * Triggers 404 response
    *
-   * @param string $pattern A route pattern such as /about/system
+   * @param string $match A route pattern such as /about/system
    */
-  public function trigger404($match = null)
+  public function trigger404(?string $match = null): void
   {
 
     // Counter to keep track of the number of routes we've handled
@@ -348,7 +348,7 @@ class Router extends Singleton
         $matches = [];
 
         // check if there is a match and get matches as $matches (pointer)
-        $is_match = $this->patternMatches($route_pattern, $this->getCurrentUri(), $matches, PREG_OFFSET_CAPTURE);
+        $is_match = $this->patternMatches($route_pattern, $this->getCurrentUri(), $matches);
 
         // is fallback route match?
         if ($is_match) {
@@ -388,12 +388,11 @@ class Router extends Singleton
    *
    * @param $pattern
    * @param $uri
-   * @param $matches
-   * @param $flags
+   * @param array<mixed, mixed> $matches
    *
    * @return bool -> is match yes/no
    */
-  private function patternMatches($pattern, $uri, &$matches, $flags)
+  private function patternMatches(string $pattern, string $uri, array &$matches)
   {
     // Replace all curly braces matches {} into word patterns (like Laravel)
     $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
@@ -405,15 +404,17 @@ class Router extends Singleton
   /**
    * Handle a a set of routes: if a match is found, execute the relating handling function.
    *
-   * @param array $routes       Collection of route patterns and their handling functions
+   * @param array<string, mixed> $routes       Collection of route patterns and their handling functions
    * @param bool  $quitAfterRun Does the handle function need to quit after one route was matched?
    *
    * @return int The number of routes handled
    */
-  private function handle($routes, $quitAfterRun = false)
+  private function handle(array $routes, bool $quitAfterRun = false)
   {
     // Counter to keep track of the number of routes we've handled
     $numHandled = 0;
+
+    $matches = [];
 
     // The current page URL
     $uri = $this->getCurrentUri();
@@ -422,7 +423,7 @@ class Router extends Singleton
     foreach ($routes as $route) {
 
       // get routing matches
-      $is_match = $this->patternMatches($route['pattern'], $uri, $matches, PREG_OFFSET_CAPTURE);
+      $is_match = $this->patternMatches($route['pattern'], $uri, $matches);
 
       // is there a valid match?
       if ($is_match) {
@@ -459,7 +460,10 @@ class Router extends Singleton
     return $numHandled;
   }
 
-  private function invoke($fn, $params = array())
+  /**
+   * @param array<mixed> $params
+   * */
+  private function invoke(callable | string $fn, $params = array()): void
   {
     if (is_callable($fn)) {
       call_user_func_array($fn, $params);
@@ -561,15 +565,17 @@ class Router extends Singleton
   /**
    * Explicilty sets the server base path. To be used when your entry script path differs from your entry URLs.
    * @see https://github.com/bramus/router/issues/82#issuecomment-466956078
-   *
-   * @param string
    */
-  public function setBasePath($serverBasePath)
+  public function setBasePath(string $serverBasePath): void
   {
     $this->serverBasePath = $serverBasePath;
   }
 
-  public static function mapToDirectory(string $path, string $fileExtension = ".wl.php"){
+  /**
+   * @return array<string, string>
+   * */
+  public static function mapToDirectory(string $path, string $fileExtension = ".wl.php"): array
+  {
     $pages = [];
     $dirit = new \DirectoryIterator($path);
     foreach ($dirit as $file) {

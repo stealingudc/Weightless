@@ -8,18 +8,18 @@ use Weightless\Core\Module\ViewModule;
 
 class HTMLModuleElement extends HTMLElement
 {
-  public function __construct($attributes = [], public string $textContent = '', public HTMLDocument | null &$document)
+  public function __construct(public HTMLDocument | null &$document, $attributes = [], public string $textContent = '')
   {
-    parent::__construct('module', $attributes, $textContent, $document);
+    parent::__construct('module', $document, $attributes, $textContent);
   }
 
-  public function toString()
+  public function toString(): string
   {
     $this->formatChildren();
     $className = $this->attributes["name"] ?? "";
     if ($className === "") {
       trigger_error("Module has no name");
-      return;
+      return "";
     }
     $args = [];
     foreach ($this->attributes as $k => $attribute) {
@@ -30,6 +30,7 @@ class HTMLModuleElement extends HTMLElement
     $refl = new \ReflectionClass($className);
     if (is_subclass_of($className, ViewModule::class)) {
       foreach ($refl->getConstructor()->getParameters() as $key => $param) {
+        // @phpstan-ignore-next-line (See: https://github.com/phpstan/phpstan/issues/3937)
         $type = $param->getType()->getName();
         if ($type === "int") {
           $args[$key] = intval($args[$key]);
@@ -42,7 +43,7 @@ class HTMLModuleElement extends HTMLElement
     }
     return "";
   }
-  protected function formatChildren()
+  protected function formatChildren(): string
   {
     $children_strings = [];
     foreach ($this->children as $child) {

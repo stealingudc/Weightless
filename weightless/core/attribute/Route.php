@@ -7,13 +7,16 @@ use Weightless\Core\Router;
 #[\Attribute]
 class Route extends Attribute
 {
+  /**
+   * @param array<string> $methods
+   * */
   public function __construct(public string $url, public array $methods) {}
 
-  public function execute()
+  public function execute(): void
   {
     $obj = $this;
     $closure = function ($args = null) use ($obj) {
-      if($args === null){
+      if ($args === null) {
         call_user_func([$obj->targetClass, $obj->target]);
       }
       if (!is_array($args)) {

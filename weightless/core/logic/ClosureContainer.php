@@ -7,8 +7,10 @@ namespace Weightless\Core\Logic;
  * This does NOT work with Closure objects. */
 class ClosureContainer
 {
-  private $variables = [];
-  private $imports = [];
+  /** @var array<mixed> */
+  private array $variables = [];
+  /** @var array<mixed> */
+  private array $imports = [];
 
   public function __construct(public object $obj) {}
 
@@ -17,7 +19,7 @@ class ClosureContainer
    *
    * @param string $code - The plaintext PHP code.
    */
-  private function appendPlaintextVars(string $code)
+  private function appendPlaintextVars(string $code): string
   {
     // Magic regex. Please don't ask - it just works.
     $code = trim($code);
@@ -28,12 +30,14 @@ class ClosureContainer
         // This is an import statement (either `require`, `require_once`, or `use`)
         $this->imports[] = trim($match[0]);
       }
-      $require = $match[0] ?? '';
-      $use = $match[1] ?? '';
-      $var_name = $match[2] ?? null;
-      $var_value_code = $match[3] ?? null;
+      $require = $match[0];
+      $use = $match[1];
+      $var_name = $match[2];
+      // PHPStan is bad at regex.
+      // @phpstan-ignore-next-line
+      $var_value_code = $match[3];
 
-      $this->variables[$var_name] = eval(($require ?? "") . ($use ?? "") . 'return ' . $var_value_code . ';');
+      $this->variables[$var_name] = eval(($require) . ($use) . 'return ' . $var_value_code . ';');
     }
 
 
@@ -48,7 +52,7 @@ class ClosureContainer
    * @param string $code - The plaintext PHP code.
    * @return mixed
    */
-  public function execute(string $code)
+  public function execute(string $code): mixed
   {
     $code = $this->appendPlaintextVars($code);
     $imports_str = "";

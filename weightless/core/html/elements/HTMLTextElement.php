@@ -8,10 +8,10 @@ class HTMLTextElement extends HTMLElement
 {
   public function __construct(string $textContent, HTMLDocument | null &$document)
   {
-    parent::__construct('#text', [], $textContent, $document);
+    parent::__construct('#text', $document, [], $textContent);
   }
 
-  public function toString()
+  public function toString(): string
   {
     return htmlentities($this->textContent);
   }

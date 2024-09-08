@@ -7,7 +7,7 @@ use Weightless\Core\HTML\HTMLFileAttribute;
 
 class Weightless
 {
-  public static function init()
+  public static function init(): void
   {
     Router::getInstance()->set404(function () {
       header("HTTP/1.1 404 Not Found");
@@ -24,7 +24,7 @@ class Weightless
     Router::getInstance()->run();
   }
 
-  private static function loadControllers()
+  private static function loadControllers(): void
   {
     $dir_iter = new \RecursiveDirectoryIterator("controllers");
     $iter = new \RecursiveIteratorIterator($dir_iter);
@@ -63,7 +63,7 @@ class Weightless
     }
   }
 
-  private static function loadRuntimeModules()
+  private static function loadRuntimeModules(): void
   {
     $dir_iter = new \RecursiveDirectoryIterator("modules");
     $iter = new \RecursiveIteratorIterator($dir_iter);
@@ -91,7 +91,7 @@ class Weightless
     }
   }
 
-  private static function loadViews()
+  private static function loadViews(): void
   {
 
     $dir_iter = new \RecursiveDirectoryIterator("views");

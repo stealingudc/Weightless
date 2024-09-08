@@ -4,7 +4,7 @@ namespace Weightless\Core\Logic;
 
 abstract class Singleton
 {
-  protected function __construct() {}
+  final protected function __construct() {}
   final public static function getInstance(): static
   {
     static $instances = [];

@@ -26,6 +26,9 @@ class ORM
     return $tableAttr->newInstance()->name;
   }
 
+  /**
+   * @return array<string, string> 
+   */
   protected static function getColumnMappings(object $entity): array
   {
     $reflection = new \ReflectionClass($entity);
@@ -54,6 +57,7 @@ class ORM
     $values = [];
     $placeholders = [];
     $idProperty = null;
+    $autoIncrement = null;
 
     foreach ($columns as $property => $column) {
       $reflectionProperty = new \ReflectionProperty($entity, $property);
@@ -147,6 +151,9 @@ class ORM
     $stmt->execute([$idValue]);
   }
 
+  /**
+   * @return array<mixed>
+   * */
   public static function find(string $className, string $column, mixed $value): array
   {
     $tableName = self::getTableName($className);
@@ -198,13 +205,16 @@ class ORM
     return $entities;
   }
 
-  public static function findOne(string $className, string $column, $value): ?object
+  public static function findOne(string $className, string $column, mixed $value): ?object
   {
     $results = self::find($className, $column, $value);
 
     return $results[0] ?? null;
   }
 
+  /**
+   * @return array<mixed>
+   * */
   public static function findAll(string $className): array
   {
     $tableName = self::getTableName($className);
@@ -231,6 +241,9 @@ class ORM
     return $results;
   }
 
+  /**
+   * @return array<mixed>
+   * */
   private static function findRelated(string $targetEntity, string $mappedBy, object $entity): array
   {
     $tableName = self::getTableName($targetEntity);
@@ -259,6 +272,7 @@ class ORM
 
     foreach ($columns as $property => $column) {
       $reflectionProperty = new \ReflectionProperty($entity, $property);
+      // @phpstan-ignore-next-line (See: https://github.com/phpstan/phpstan/issues/3937)
       $type = $reflectionProperty->getType()->getName();
 
       // Define column types based on PHP types

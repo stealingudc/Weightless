@@ -2,8 +2,11 @@
 
 namespace Weightless\Core;
 
-class Environment
+final class Environment
 {
+ /**
+  * @var array<string, mixed> $variables
+  */
   public array $variables = [];
   protected function __construct()
   {
@@ -19,7 +22,7 @@ class Environment
     return $instances[static::class];
   }
 
-  private function parseFile(string $path)
+  private function parseFile(string $path): void
   {
     if (!file_exists($path)) {
       throw new \InvalidArgumentException(sprintf('%s file does not exist', $path));

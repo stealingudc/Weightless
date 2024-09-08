@@ -6,8 +6,14 @@ class HTMLFileAttribute
 {
   const PREG_PATTERN = '/^(?!\s)#\[\s*(\w+)(?:\s*\((.*?)\))?\s*\]/';
   public string $name;
+  /**
+   * @var array<mixed>
+   * */
   public array $args;
 
+  /**
+   * @var array<string, string>
+   * */
   public static array $registeredAttributes;
 
   public function __construct(string $name, string $argsString)
@@ -16,17 +22,21 @@ class HTMLFileAttribute
     $this->args = $this->parseArgs($argsString);
   }
 
-  public function __set($name, $value)
+  public function __set(mixed $name, mixed $value): void
   {
     $this[$name] = $value;
   }
 
-  public function __get($name)
+  public function __get(mixed $name): mixed
   {
     return $this[$name];
   }
 
-  private function parseArgs(string $argsString)
+  /**
+   * @return array<mixed>
+   * */
+
+  private function parseArgs(string $argsString): array
   {
     $args = [];
 
@@ -63,7 +73,7 @@ class HTMLFileAttribute
     return $args;
   }
 
-  private function parseValue(mixed $value)
+  private function parseValue(mixed $value): mixed
   {
     // Handle quoted strings
     if (preg_match('/^["\'](.*)["\']$/', $value, $strMatch)) {
@@ -93,7 +103,10 @@ class HTMLFileAttribute
     return $value;
   }
 
-  public function execute(array $args = [])
+  /**
+   * @param array<mixed> $args 
+   * */
+  public function execute(array $args = []): mixed
   {
     if (!empty(HTMLFileAttribute::$registeredAttributes[$this->name])) {
       if (count($args) > 0) {
@@ -102,6 +115,7 @@ class HTMLFileAttribute
       return call_user_func_array(HTMLFileAttribute::$registeredAttributes[$this->name], $this->args);
     } else {
       trigger_error("HTMLFileAttribute {$this->name} is not defined or has not been registered correctly");
+      return;
     }
   }
 
