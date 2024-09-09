@@ -1,0 +1,27 @@
+{
+    "name": "weightless/weightless",
+    "description": "The Weightless Framework",
+    "type": "project",
+    "license": "GPL",
+    "autoload": {
+        "psr-4": {
+            "Weightless\\": "src/weightless"
+        },
+        "classmap": [
+            "src/modules",
+            "src/controllers",
+            "src/models"
+        ]
+    },
+    "authors": [
+        {
+            "name": "stealingudc",
+            "email": "vladimirdamian23@gmail.com"
+        }
+    ],
+    "minimum-stability": "RC",
+    "require-dev": {
+        "phpstan/phpstan": "^1.12",
+        "rector/rector": "^1.2"
+    }
+}
