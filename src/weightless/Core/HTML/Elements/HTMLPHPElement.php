@@ -15,9 +15,16 @@ class HTMLPHPElement extends HTMLElement
   public function toString(): string
   {
     $code = $this->textContent;
-    if ($this->parentElement !== null) {
-      return $this->parentElement->closureContainer->execute($code);
+    if ($this->parentElement === null) {
+      return "";
     }
-    return "";
+    $res = $this->parentElement->closureContainer->execute($code);
+    if ($res === false) {
+      // Will throw TypeError first
+      // @codeCoverageIgnoreStart
+      return "";
+      // @codeCoverageIgnoreEnd
+    }
+    return $res;
   }
 }

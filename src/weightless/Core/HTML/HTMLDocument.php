@@ -34,9 +34,12 @@ class HTMLDocument extends HTMLElement
     // Decode HTML entities for correct parsing
     $tokens = preg_split('/(<\?php.*?\?>|<\/?\w+.*?>)/s', $html, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
 
+    // Expected behaviour.
+    // @codeCoverageIgnoreStart
     if ($tokens === false) {
       return $document;
     }
+    // @codeCoverageIgnoreEnd
 
     foreach ($tokens as $token) {
       if (preg_match('/^<\?php(.*?)\?>$/s', $token, $matches)) {
@@ -74,9 +77,12 @@ class HTMLDocument extends HTMLElement
     $document = new self();
     $stack = [$document];
 
+    // Expected behaviour.
+    // @codeCoverageIgnoreStart
     if ($html === false) {
       return $document;
     }
+    // @codeCoverageIgnoreEnd
 
     if (preg_match_all(HTMLFileAttribute::PREG_PATTERN, $html, $matches, PREG_OFFSET_CAPTURE)) {
       $html = substr($html, $matches[0][count($matches[0]) - 1][1] + strlen($matches[0][count($matches[0]) - 1][0]));
@@ -86,9 +92,12 @@ class HTMLDocument extends HTMLElement
     // Decode HTML entities for correct parsing
     $tokens = preg_split('/(<\?php.*?\?>|<\/?\w+.*?>)/s', $html, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
 
+    // Expected behaviour.
+    // @codeCoverageIgnoreStart
     if ($tokens === false) {
       return $document;
     }
+    // @codeCoverageIgnoreEnd
 
     foreach ($tokens as $token) {
       if (preg_match('/^<\?php(.*?)\?>$/s', $token, $matches)) {

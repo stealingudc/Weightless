@@ -34,6 +34,9 @@ class HTMLModuleElement extends HTMLElement
       throw new InvalidClassNameException($className);
     }
     $refl = new \ReflectionClass($className);
+    if (!is_subclass_of($className, ViewModule::class)) {
+      throw new InvalidModuleException($className);
+    }
     if (is_subclass_of($className, ViewModule::class) && $refl->getConstructor() !== null) {
       foreach ($refl->getConstructor()->getParameters() as $key => $param) {
         // @phpstan-ignore-next-line (See: https://github.com/phpstan/phpstan/issues/3937)
@@ -43,14 +46,16 @@ class HTMLModuleElement extends HTMLElement
         }
       }
       $instance = $refl->newInstanceArgs($args);
-      if(!$instance instanceof ViewModule){
-        throw new InvalidModuleException($className); 
-      }
-      $instance->textContent = $this->textContent;
+      // @phpstan-ignore-next-line (Dude, I already told you. It's a HTMLElement.)
+      $instance->textContent = $this->textContent ?? "";
+      // @phpstan-ignore-next-line (Dude, I already told you. It's a HTMLElement.)
       $element = HTMLDocument::parse($instance->build());
       return $element->formatChildren();
     }
+    // Will throw TypeError first
+    // @codeCoverageIgnoreStart
     return "";
+    // @codeCoverageIgnoreEnd
   }
   #[\Override]
   protected function formatChildren(): string

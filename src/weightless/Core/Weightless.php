@@ -8,6 +8,11 @@ use Weightless\Core\HTML\HTMLDocument;
 use Weightless\Core\HTML\HTMLFileAttribute;
 use Weightless\Core\Module\RuntimeModule;
 
+
+/*
+ * This is just a glorified autoloader.
+ * */
+// @codeCoverageIgnoreStart
 class Weightless
 {
   public static function init(): void
@@ -134,3 +139,4 @@ class Weightless
     }
   }
 }
+// @codeCoverageIgnoreEnd

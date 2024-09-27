@@ -12,7 +12,8 @@ if (empty($_SESSION)) {
   session_start();
 }
 
-require_once(dirname(__DIR__)."/vendor/autoload.php");
+require_once(dirname(__DIR__) . "/vendor/autoload.php");
 
 use Weightless\Core\Weightless;
+
 Weightless::init();
