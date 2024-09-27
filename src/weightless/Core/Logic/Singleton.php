@@ -14,5 +14,8 @@ abstract class Singleton
     return $instances[static::class];
   }
 
+  // Can't test unimplemented function
+  // @codeCoverageIgnoreStart
   private function __clone() {}
+  // @codeCoverageIgnoreEnd
 }

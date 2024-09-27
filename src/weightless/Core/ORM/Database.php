@@ -6,7 +6,10 @@ use Weightless\Core\Environment;
 
 class Database
 {
+  // Cannot test unimplemented method
+  // @codeCoverageIgnoreStart
   protected function __construct() {}
+  // @codeCoverageIgnoreEnd
   private static ?\PDO $pdo = null;
 
   final public static function getConnection(): \PDO
@@ -25,5 +28,8 @@ class Database
     return self::$pdo;
   }
 
+  // Cannot test magic method
+  // @codeCoverageIgnoreStart
   private function __clone() {}
+  // @codeCoverageIgnoreEnd
 }

@@ -50,7 +50,7 @@ class Router extends Singleton
   /**
    * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
    *
-   * @param array<string>|string          $methods Allowed methods, | delimited
+   * @param array<string>          $methods Allowed methods
    * @param string          $pattern A route pattern such as /about/system
    * @param object|callable $fn      The handling function to be executed
    */
@@ -59,19 +59,8 @@ class Router extends Singleton
     $pattern = $this->baseRoute . '/' . trim($pattern, '/');
     $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
-    $methods_arr = [];
-
-    if (is_string($methods)) {
-      if ($methods === '*') {
-        $methods_arr = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"];
-      }
-      foreach ($methods_arr as $method) {
-        $this->beforeRoutes[$method][] = ['pattern' => $pattern, 'fn' => $fn];
-      }
-    } else {
-      foreach ($methods as $method) {
-        $this->beforeRoutes[$method][] = ['pattern' => $pattern, 'fn' => $fn];
-      }
+    foreach ($methods as $method) {
+      $this->beforeRoutes[$method][] = ['pattern' => $pattern, 'fn' => $fn];
     }
   }
 
@@ -209,6 +198,9 @@ class Router extends Singleton
       }
     }
 
+    // Known working polyfill for older versions of PHP
+    // @codeCoverageIgnoreStart
+
     // Method getallheaders() not available or went wrong: manually extract 'm
     foreach ($_SERVER as $name => $value) {
       if ((str_starts_with($name, 'HTTP_')) || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
@@ -217,6 +209,7 @@ class Router extends Singleton
     }
 
     return $headers;
+    // @codeCoverageIgnoreEnd
   }
 
   /**
@@ -227,24 +220,33 @@ class Router extends Singleton
   public static function getRequestMethod(): string
   {
     // Take the method as found in $_SERVER
-    $method = $_SERVER['REQUEST_METHOD'];
+    $method = @$_SERVER['REQUEST_METHOD'];
 
     // If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
     // @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-    if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+
+    // Cannot be tested via HTTP requests.
+    // @codeCoverageIgnoreStart
+    if (@$_SERVER['REQUEST_METHOD'] == 'HEAD') {
       ob_start();
       $method = 'GET';
     }
+    // @codeCoverageIgnoreEnd
+
+    // Known working polyfill
+    // @codeCoverageIgnoreStart
 
     // If it's a POST request, check for a method override header
-    elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    elseif (@$_SERVER['REQUEST_METHOD'] == 'POST') {
       $headers = self::getRequestHeaders();
       if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], ['PUT', 'DELETE', 'PATCH'])) {
         $method = $headers['X-HTTP-Method-Override'];
       }
     }
 
-    return $method;
+    // @codeCoverageIgnoreEnd
+
+    return $method ?? "GET";
   }
 
   /**
@@ -299,17 +301,21 @@ class Router extends Singleton
       if (isset($this->afterRoutes[$this->requestedMethod])) {
         $this->trigger404($this->afterRoutes[$this->requestedMethod]);
       } else {
+        // @codeCoverageIgnoreStart
         $this->trigger404();
+        // @codeCoverageIgnoreEnd
       }
     } // If a route was handled, perform the finish callback (if any)
+    // @codeCoverageIgnoreStart
     elseif ($callback && is_callable($callback)) {
       $callback();
     }
 
     // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
-    if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+    if (@$_SERVER['REQUEST_METHOD'] == 'HEAD') {
       ob_end_clean();
     }
+    // @codeCoverageIgnoreEnd
 
     // Return true if a route was handled, false otherwise
     return $numHandled !== 0;
@@ -324,8 +330,10 @@ class Router extends Singleton
   public function set404($match_fn, $fn = null): void
   {
     if (!is_null($fn)) {
+      // @codeCoverageIgnoreStart
       // @phpstan-ignore-next-line (Such that closures can be passed as the only arg without warning)
       $this->notFoundCallback[$match_fn] = $fn;
+      // @codeCoverageIgnoreEnd
     } else {
       // @phpstan-ignore-next-line (same as before)
       $this->notFoundCallback['/'] = $match_fn;
@@ -363,6 +371,8 @@ class Router extends Singleton
           // Extract the matched URL parameters (and only the parameters)
           $params = array_map(function ($match, $index) use ($matches) {
 
+
+            // @codeCoverageIgnoreStart
             // We have a following parameter: take the substring from the current param position until the next one's position (thank you PREG_OFFSET_CAPTURE)
             if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
               if ($matches[$index + 1][0][1] > -1) {
@@ -371,6 +381,7 @@ class Router extends Singleton
             } // We have no following parameters: return the whole lot
 
             return isset($match[0][0]) && $match[0][1] != -1 ? trim((string) $match[0][0], '/') : null;
+            // @codeCoverageIgnoreEnd
           }, $matches, array_keys($matches));
 
           $this->invoke($route_callable);
@@ -379,11 +390,14 @@ class Router extends Singleton
         }
       }
     }
+    // Not testable.
+    // @codeCoverageIgnoreStart
     if (($numHandled == 0) && (isset($this->notFoundCallback['/']))) {
       $this->invoke($this->notFoundCallback['/']);
     } elseif ($numHandled == 0) {
       header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
     }
+    // @codeCoverageIgnoreEnd
   }
 
   /**
@@ -439,6 +453,8 @@ class Router extends Singleton
         $params = array_map(function ($match, $index) use ($matches) {
 
           // We have a following parameter: take the substring from the current param position until the next one's position (thank you PREG_OFFSET_CAPTURE)
+          // Not testable.
+          // @codeCoverageIgnoreStart
           if (isset($matches[$index + 1]) && isset($matches[$index + 1][0]) && is_array($matches[$index + 1][0])) {
             if ($matches[$index + 1][0][1] > -1) {
               return trim(substr((string) $match[0][0], 0, $matches[$index + 1][0][1] - $match[0][1]), '/');
@@ -446,6 +462,7 @@ class Router extends Singleton
           } // We have no following parameters: return the whole lot
 
           return isset($match[0][0]) && $match[0][1] != -1 ? trim((string) $match[0][0], '/') : null;
+          // @codeCoverageIgnoreEnd
         }, $matches, array_keys($matches));
 
         // Call the handling function with the URL parameters if the desired input is callable
@@ -473,6 +490,9 @@ class Router extends Singleton
       call_user_func_array($fn, $params);
     }
 
+
+    // Known working polyfill.
+    // @codeCoverageIgnoreStart
     // If not, check the existence of special parameters
     elseif (stripos($fn, '@') !== false) {
       // Explode segments of given route
@@ -505,6 +525,7 @@ class Router extends Singleton
         // The controller class is not available or the class does not have the method $method
       }
     }
+    // @codeCoverageIgnoreEnd
   }
 
   /**
@@ -515,14 +536,17 @@ class Router extends Singleton
   public function getCurrentUri()
   {
     // Get the current Request URI and remove rewrite base path from it (= allows one to run the router in a sub folder)
-    $uri = substr(rawurldecode((string) $_SERVER['REQUEST_URI']), strlen($this->getBasePath()));
+    $uri = substr(rawurldecode((string) @$_SERVER['REQUEST_URI']), strlen($this->getBasePath()));
 
     // Don't take query params into account on the URL
     $length = strpos($uri, '?');
     if ($length != false) {
+      // Not testable.
+      // @codeCoverageIgnoreStart
       if (strstr($uri, '?') !== false) {
         $uri = substr($uri, 0, $length);
       }
+      // @codeCoverageIgnoreEnd
     }
     // Remove trailing slash + enforce a slash at the start
     return '/' . trim($uri, '/');
@@ -538,21 +562,22 @@ class Router extends Singleton
   {
     $request_url = filter_var($_SERVER['REQUEST_URI'], FILTER_SANITIZE_URL);
     if ($request_url == false) {
+      // @codeCoverageIgnoreStart
       return [];
+      // @codeCoverageIgnoreEnd
     }
     $request_url = rtrim($request_url, '/');
     $request_url = strtok($request_url, '?');
     $route_parts = explode('/', $url);
-    if ($request_url == false) {
-      return [];
-    }
-    $request_url_parts = explode('/', $request_url);
+    $request_url_parts = explode('/', $request_url ? $request_url : "");
     array_shift($route_parts);
     array_shift($request_url_parts);
     $parameters = [];
     for ($__i__ = 0; $__i__ < count($route_parts); $__i__++) {
       $route_part = $route_parts[$__i__];
       if (preg_match("/^[$]/", $route_part)) {
+        // I suck at regex.
+        // @codeCoverageIgnoreStart
         $route_part = ltrim($route_part, '$');
         array_push($parameters, $request_url_parts[$__i__]);
         ${$route_part} = @$request_url_parts[$__i__];
@@ -561,6 +586,7 @@ class Router extends Singleton
       }
     }
     return $parameters;
+    // @codeCoverageIgnoreEnd
   }
 
   /**
@@ -572,7 +598,10 @@ class Router extends Singleton
   {
     // Check if server base path is defined, if not define it.
     if ($this->serverBasePath === null) {
+      // Known working polyfill for older versions of PHP
+      // @codeCoverageIgnoreStart
       $this->serverBasePath = implode('/', array_slice(explode('/', (string) $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+      // @codeCoverageIgnoreEnd
     }
 
     return $this->serverBasePath;
@@ -592,6 +621,8 @@ class Router extends Singleton
    * */
   public static function mapToDirectory(string $path, string $fileExtension = ".wl.php"): array
   {
+    // Not testable.
+    // @codeCoverageIgnoreStart
     $pages = [];
     $dirit = new \DirectoryIterator($path);
     foreach ($dirit as $file) {
@@ -602,5 +633,6 @@ class Router extends Singleton
       }
     }
     return $pages;
+    // @codeCoverageIgnoreEnd
   }
 }

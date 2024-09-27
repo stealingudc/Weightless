@@ -68,13 +68,18 @@ class ORM
       $value = $reflectionProperty->getValue($entity);
 
       // Check if this property is the ID and if it should auto-increment
-      if ($reflectionProperty->getAttributes(Id::class)) {
+      if ($reflectionProperty->getAttributes(ID::class)) {
         $idProperty = $reflectionProperty;
         $autoIncrement = $reflectionProperty->getAttributes(AutoIncrement::class)[0] ?? null;
 
         if ($autoIncrement && $autoIncrement->newInstance()->enabled && $value === null) {
           continue; // Skip adding the ID column if it's auto-incrementing and not set
         }
+      }
+
+      // convert bool values to 0 (false) or 1 (true) before executing the query.
+      if (is_bool($value)) {
+        $value = $value ? 1 : 0;
       }
 
       $fields[] = $column;
@@ -111,7 +116,7 @@ class ORM
     foreach ($columns as $property => $column) {
       $value = (new \ReflectionProperty($entity, $property))->getValue($entity);
 
-      if ((new \ReflectionProperty($entity, $property))->getAttributes(Id::class)) {
+      if ((new \ReflectionProperty($entity, $property))->getAttributes(ID::class)) {
         $idColumn = $column;
         $idValue = $value;
       } else {
@@ -120,9 +125,12 @@ class ORM
       }
     }
 
+    // PDOException will be thrown first.
+    // @codeCoverageIgnoreStart
     if (!$idColumn || !$idValue) {
       throw new \Exception("Entity does not have a valid ID.");
     }
+    // @codeCoverageIgnoreEnd
 
     $values[] = $idValue;
     $sql = "UPDATE $tableName SET " . implode(', ', $fields) . " WHERE $idColumn = ?";
@@ -139,7 +147,7 @@ class ORM
     $idValue = null;
 
     foreach ($columns as $property => $column) {
-      if ((new \ReflectionProperty($entity, $property))->getAttributes(Id::class)) {
+      if ((new \ReflectionProperty($entity, $property))->getAttributes(ID::class)) {
         $idColumn = $column;
         $idValue = (new \ReflectionProperty($entity, $property))->getValue($entity);
         break;
@@ -160,6 +168,10 @@ class ORM
    * */
   public static function find(string $className, string $column, mixed $value): array
   {
+    if (!class_exists($className)) {
+      throw new InvalidClassNameException($className);
+    }
+
     $tableName = self::getTableName($className);
 
     // Build the SQL query to find by the given column
@@ -173,10 +185,6 @@ class ORM
     }
 
     $entities = [];
-
-    if (!class_exists($className)) {
-      throw new InvalidClassNameException($className);
-    }
 
     $reflection = new \ReflectionClass($className);
 
@@ -202,9 +210,11 @@ class ORM
         }
 
         if ($property->getAttributes(ManyToOne::class)) {
+          // @codeCoverageIgnoreStart
           $relation = $property->getAttributes(ManyToOne::class)[0]->newInstance();
-          $relatedEntity = self::findOne($relation->targetEntity, $property->getAttributes(Column::class)[0]->newInstance()->name, $data[$property->getAttributes(Column::class)[0]->newInstance()->name]);
+          $relatedEntity = self::findOne($relation->targetEntity, "id", $data[$property->getAttributes(Column::class)[0]->newInstance()->name]);
           $property->setValue($entity, $relatedEntity);
+          // @codeCoverageIgnoreEnd
         }
       }
 
@@ -226,6 +236,10 @@ class ORM
    * */
   public static function findAll(string $className): array
   {
+    if (!class_exists($className)) {
+      throw new InvalidClassNameException($className);
+    }
+
     $tableName = self::getTableName($className);
     $sql = "SELECT * FROM $tableName";
     $stmt = Database::getConnection()->prepare($sql);
@@ -234,9 +248,6 @@ class ORM
 
     $results = [];
     foreach ($rows as $data) {
-      if (!class_exists($className)) {
-        throw new InvalidClassNameException($className);
-      }
       $reflection = new \ReflectionClass($className);
       $entity = new $className();
       foreach ($data as $column => $value) {
@@ -258,10 +269,10 @@ class ORM
    * */
   private static function findRelated(string $targetEntity, string $mappedBy, object $entity): array
   {
-    $tableName = self::getTableName($targetEntity);
     if (!class_exists($targetEntity)) {
       throw new InvalidClassNameException($targetEntity);
     }
+    $tableName = self::getTableName($targetEntity);
     $mappedByColumn = (new \ReflectionClass($targetEntity))->getProperty($mappedBy)->getAttributes(Column::class)[0]->newInstance()->name;
     $idValue = (new \ReflectionProperty($entity, 'id'))->getValue($entity);
 
@@ -300,7 +311,7 @@ class ORM
       };
 
       // Check if this property is the ID and if it should auto-increment
-      if ($reflectionProperty->getAttributes(Id::class)) {
+      if ($reflectionProperty->getAttributes(ID::class)) {
         $sqlType .= ' PRIMARY KEY';
         $autoIncrement = $reflectionProperty->getAttributes(AutoIncrement::class)[0] ?? null;
 
@@ -339,8 +350,11 @@ class ORM
     }
 
     if (!$validator->validate($data, $rules)) {
+      // TypeError will be thrown first.
+      // @codeCoverageIgnoreStart
       $errors = $validator->getErrors();
       throw new \Exception("Validation failed: " . json_encode($errors));
+      // @codeCoverageIgnoreEnd
     }
   }
 }

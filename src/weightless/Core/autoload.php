@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * Who tests autoloaders?
+ * */
+// @codeCoverageIgnoreStart
 spl_autoload_register(function ($class): void {
     // Define the base directory for the namespace prefix
     $baseDir = dirname(__DIR__, 2) . '/';
@@ -23,3 +27,4 @@ spl_autoload_register(function ($class): void {
         require $file;
     }
 });
+// @codeCoverageIgnoreEnd

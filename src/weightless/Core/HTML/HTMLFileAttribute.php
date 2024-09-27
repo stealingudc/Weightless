@@ -102,9 +102,12 @@ class HTMLFileAttribute
       throw new InvalidClassNameException("HTMLFileAttribute {$this->name} is not defined or has not been registered correctly");
     }
     $callback = HTMLFileAttribute::$registeredAttributes[$this->name];
+    // Will always be callable, since register() will throw TypeError if not
+    // @codeCoverageIgnoreStart
     if (!is_callable($callback)) {
       throw new \BadFunctionCallException("Function $callback does not exist or is not callable");
     }
+    // @codeCoverageIgnoreEnd
     if (count($args) > 0) {
       return call_user_func_array($callback, $args);
     }

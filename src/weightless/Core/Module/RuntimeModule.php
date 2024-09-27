@@ -7,5 +7,8 @@ use Weightless\Core\Logic\Singleton;
 
 abstract class RuntimeModule extends Singleton implements Module
 {
-  public function onPageLoad(): void {}
+  // Cannot test unimplemented method
+  // @codeCoverageIgnoreStart
+  public abstract function onPageLoad(): void;
+  // @codeCoverageIgnoreEnd
 }

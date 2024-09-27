@@ -4,9 +4,9 @@ namespace Weightless\Core;
 
 final class Environment
 {
- /**
-  * @var array<string, string> $variables
-  */
+  /**
+   * @var array<string, string> $variables
+   */
   public array $variables = [];
   protected function __construct()
   {
@@ -25,13 +25,19 @@ final class Environment
   private function parseFile(string $path): void
   {
     if (!file_exists($path)) {
+      // Path is hardcoded (TODO: the opposite of that) 
+      // @codeCoverageIgnoreStart
       throw new \InvalidArgumentException(sprintf('%s file does not exist', $path));
+      // @codeCoverageIgnoreEnd
     }
 
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if($lines === false){
+    if ($lines === false) {
+      // Path is hardcoded (TODO: the opposite of that) 
+      // @codeCoverageIgnoreStart
       trigger_error("The specified .env file does not exist");
       return;
+      // @codeCoverageIgnoreEnd
     }
     foreach ($lines as $line) {
       // Skip comments
@@ -55,5 +61,8 @@ final class Environment
     }
   }
 
+  // Cannot test magic method
+  // @codeCoverageIgnoreStart
   private function __clone() {}
+  // @codeCoverageIgnoreEnd
 }

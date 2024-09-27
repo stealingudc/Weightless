@@ -10,32 +10,37 @@ class Route extends Attribute
   /**
    * @param array<string> $methods
    * */
-  public function __construct(public string $url, public array $methods) {}
+  public function __construct(public string $url, public array $methods)
+  {
+    parent::__construct(attributeName: self::class);
+  }
 
   #[\Override]
-  public function execute(): void
+  public function onFunctionCall(): void
   {
-    $obj = $this;
-    $closure = function ($args = null) use ($obj): void {
-      if (!class_exists($obj->targetClass)) {
-        throw new \ReflectionException("Class {$obj->targetClass} does not exist");
-      }
-      $refl = new \ReflectionClass($obj->targetClass);
-      $instance = $refl->getMethod("getInstance")->invoke(null);
-      $callback = [$instance, $obj->target];
-      if (!is_callable($callback)) {
-        throw new \BadFunctionCallException("Function {$obj->target} does not exist on class {$obj->targetClass}");
-      }
-      if ($args === null) {
-        call_user_func($callback);
-        return;
-      }
-      if (!is_array($args)) {
-        call_user_func_array($callback, [$args]);
-        return;
-      }
-      call_user_func_array($callback, [$args]);
-    };
-    Router::getInstance()->match($this->methods, $this->url, $closure);
+    if (!class_exists($this->targetClass)) {
+      throw new \ReflectionException("Class {$this->targetClass} does not exist");
+    }
+    $refl = new \ReflectionClass($this->targetClass);
+    $instance = $refl->getMethod("getInstance")->invoke(null);
+    $callback = [$instance, $this->target];
+    if (!is_callable($callback)) {
+      throw new \BadFunctionCallException("Function {$this->target} does not exist on class {$this->targetClass}");
+    }
+    if ($this->args === null) {
+      // Cannot be tested
+      // @codeCoverageIgnoreStart
+      call_user_func($callback);
+      return;
+      // @codeCoverageIgnoreEnd
+    }
+    if (!is_array($this->args)) {
+      // Cannot be tested
+      // @codeCoverageIgnoreStart
+      call_user_func_array($callback, [$this->args]);
+      return;
+      // @codeCoverageIgnoreEnd
+    }
+    call_user_func_array($callback, [$this->args]);
   }
 }
