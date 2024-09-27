@@ -3,3 +3,4 @@ vendor/
 #dev 
 rector.php
 public/apache-pwd.sh
+tests/coverage
